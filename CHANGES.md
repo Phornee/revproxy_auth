@@ -1,0 +1,34 @@
+- 0.2.3:
+  - https://phornee.atlassian.net/jira/software/projects/PIW/boards/1?selectedIssue=PIW-2
+  - Added threshold to avoid start program if more than 10 minutes passed
+  - Added dateutc field to the service response
+- 0.2.4:
+  - Bugfix: Reading humidity from DHT22 was conflicting with GPIO
+- 0.2.5
+  - Bugfix: Error in time threshold filtering
+- 0.2.6
+  - Bugfix: Changing program was not updating waterflow's cache
+  - Added backend version in service response
+- 0.2.7
+  - Bugfix: Incorrent import importlib_metadata
+- 0.2.8
+  - https://phornee.atlassian.net/jira/software/projects/PIW/boards/1?selectedIssue=PIW-12
+  - getLastLoopTime instead of isLooping Correctly
+- 0.2.9
+  - Influxdb 1.6.4 connection
+- 0.2.10
+  - New Config 
+- 0.2.11
+  - Fix Config writting 
+- 0.2.12
+  - Config subclass 
+- 0.2.13
+  - Fix adding the configwaterflow in init 
+- 0.2.20
+  - Fix 
+- 0.3.0
+  - New config class
+- 0.3.1
+  - Fix
+- 0.3.3
+  - Support for new logger

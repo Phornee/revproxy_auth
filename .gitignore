@@ -1,0 +1,5 @@
+/build
+/dist
+homeservices/__pycache__
+homeservices.egg-info
+*.pyc

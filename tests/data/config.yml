@@ -1,0 +1,7 @@
+NAS: https://mydomain.synology.me:5001
+mapping:
+  w3test.fakedomain.com:
+    host: https://www.w3.org
+    endpoint: MarkUp/Test/HTML401/current/tests/sec5_3_1-BF-01.html
+    method: GET
+

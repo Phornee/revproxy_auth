@@ -1,0 +1,30 @@
+<!--authproxy-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width-device-width, initial-scale=1.0">
+<link rel="stylesheet" type="text/css" href="revproxy_auth_static/css/view.css" media="all">
+<title>Login with Synology Auth</title>
+</head>
+<body id="main_body">
+  <div id="form_container">
+    <form id="signin_form" style=" margin-block-end: 0em;" method="POST">
+            <h1>Sign in</h1>
+            <div style="margin: 1px">
+                <input name = "user" type="text" placeholder="User" class="edit_text">
+            </div>
+            <div style="margin: 1px">
+                <input name = "password" type="password" placeholder="Password" class="edit_text">
+            </div>
+            <div style="margin: 1px">
+                <input name = "OTP" type="text" placeholder="OTP Code" class="edit_text">
+            </div>
+            <div style="margin: 1px">
+                <input type="submit" value="Sign in" class="button_text">
+            </div>
+            <input name = "token" type="hidden" value="{{token}}">
+            <input name = "from_auth" type="hidden" value="True">
+        </form>  
+  </div>
+  </body>
+</html>
