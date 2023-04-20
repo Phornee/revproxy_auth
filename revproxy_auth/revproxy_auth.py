@@ -81,6 +81,9 @@ class RevProxyAuth():
 
     def _build_cookie(self, req_dict: dict) -> tuple:
         mapping_info = self._config['mapping'].get(req_dict['host'])
+        if not mapping_info:
+            return None, None
+
         host = mapping_info.get('host')
         endpoint = mapping_info.get('endpoint')
         method = mapping_info.get('method')
@@ -170,6 +173,8 @@ class RevProxyAuth():
 
     def _reask_credentials(self, request_dict: dict, old_cookie_name: str = None) -> ApiRestResponse:
         new_cookie, new_cookie_name = self._build_cookie(request_dict)
+        if not new_cookie: # Unable to build cookie for requested path: host unknown
+            return ApiRestResponse(request_dict['host'], status=501)
         self._clear_expired_cookies() # Housekeeping
         print(f'Creating new cookie {new_cookie_name}')
         self._write_cookie(new_cookie, new_cookie_name)
