@@ -1,7 +1,19 @@
 NAS: https://mydomain.synology.me:5001
+testing_credentials:
+  user: pepe
+  password: '123456'
+  OTP: '1234'
 mapping:
   w3test.fakedomain.com:
     host: https://www.w3.org
     endpoint: MarkUp/Test/HTML401/current/tests/sec5_3_1-BF-01.html
+    method: GET
+  localhost:
+    host: http://localhost
+    endpoint: /
+    method: GET
+  localhost_test:
+    host: http://localhost
+    endpoint: /test/
     method: GET
 
