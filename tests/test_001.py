@@ -46,7 +46,7 @@ class Testing(unittest.TestCase):
         self.assertIsNotNone(self.__class__.auth_cookie_name, 'Cookie name was not send by server.')
 
         # We simulate the client action by sending back the right testing credentials.
-        response = self.client.post('/', data={'user': 'pepe',
+        response = self.client.post('/', data={'user': ' pepe', # Note the leading space before pepe... should work
                                                'password': '123456',
                                                'OTP': '1234',
                                                'auth': self.__class__.auth_cookie_name})

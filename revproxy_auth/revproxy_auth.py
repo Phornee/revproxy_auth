@@ -22,7 +22,10 @@ class RevProxyAuth():
     The path_redirect function should be called from a '/<path:path>' flask rule
     Also a rule '/' should call this function like this:  return self.auth_proxy.path_redirect("/")
     """
-    def __init__(self, app: Flask, template_config_path: str=None, dry_run=False) -> None:
+    def __init__(self, app: Flask,
+                 root_class: str='revproxy_auth',
+                 template_config_path: str=None,
+                 dry_run=False) -> None:
         """
             template_config_path: full path of configuration template
         """
@@ -30,11 +33,16 @@ class RevProxyAuth():
         if not template_config_path:
             template_config_path = os.path.join(Path(__file__).parent.resolve(), './config-template.yml')
 
-        self._config = Config('authproxy', template_config_path, 'config.yml', dry_run=dry_run)
+        self._config = Config(root_class, template_config_path, 'revproxy_auth_config.yml', dry_run=dry_run)
 
-        self.auth_cookie_folder = os.path.join(Path(__file__).parent.resolve(), 'auth_cookies')
-        self.session_cookie_folder = os.path.join(Path(__file__).parent.resolve(), 'session_cookies')
+        self.homevar = os.path.join(str(Path.home()), 'var', root_class)
 
+        self.auth_cookie_folder = os.path.join(self.homevar, 'auth_cookies')
+        if not os.path.exists(self.auth_cookie_folder):
+            os.makedirs(self.auth_cookie_folder)
+        self.session_cookie_folder = os.path.join(self.homevar, 'session_cookies')
+        if not os.path.exists(self.session_cookie_folder):
+            os.makedirs(self.session_cookie_folder)
         self.app = app
         self.app.add_url_rule(rule='/revproxy_auth_static/<path:path>',
                               view_func=self._get_static_content,
@@ -65,7 +73,7 @@ class RevProxyAuth():
         cookie_name = req.cookies.get('token', None)
         print(f'Incomming Session token Cookie name: {cookie_name}')
 
-        if cookie_name and not req.form.get('auth', None): 
+        if cookie_name and not req.form.get('auth', None):
             # We get a session token... lets verify if its legitimate, and still alive
             cookie = self._get_local_session_cookie(cookie_name)
             if cookie: # Already authenticated --> Lets tunnel info back to client
@@ -180,8 +188,7 @@ class RevProxyAuth():
 
     def _clear_expired_cookies(self, cookie_folder: str):
         for filename in os.listdir(cookie_folder):
-            if filename != '.gitignore':
-                self._clear_local_cookie_if_expired(cookie_folder, filename)
+            self._clear_local_cookie_if_expired(cookie_folder, filename)
 
     def _build_auth_popup(self, cookie_name: str) -> Response:
         # Get the auth html form template and send back to the user, so he can authenticate
@@ -217,9 +224,9 @@ class RevProxyAuth():
     def _credentials_valid(self, form):
         token = form.get('auth', None)
         if token:
-            user = form.get('user', None)
-            password = form.get('password', None)
-            otp = form.get('OTP', None)
+            user = form.get('user', '').strip(' \t\n\r')
+            password = form.get('password', '').strip(' \t\n\r')
+            otp = form.get('OTP', '').strip(' \t\n\r')
             testing_credentials = self._config['testing_credentials']
             if not testing_credentials:
                 url = (f'{self._config["NAS"]}/webapi/entry.cgi?api=SYNO.API.Auth&version=6&method=login'
