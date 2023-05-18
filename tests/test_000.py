@@ -2,8 +2,7 @@
 import unittest
 from pathlib import Path
 
-from http.cookies import SimpleCookie
-from flask import Flask, request, Response
+from flask import Flask, Response
 from bs4 import BeautifulSoup
 from revproxy_auth import RevProxyAuth
 

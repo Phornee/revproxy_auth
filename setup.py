@@ -31,7 +31,7 @@ setuptools.setup(
     install_requires=[
         'Flask>=1.1.2',
         'config_yml>=0.3.0',
-        'beautifulsoup>=4.10.0'
+        'beautifulsoup4>=4.10.0'
     ],
     python_requires='>=3.6',
 )
