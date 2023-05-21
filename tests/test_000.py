@@ -1,5 +1,6 @@
 """ unittesting """
 import unittest
+from unittest.mock import Mock
 from pathlib import Path
 
 from flask import Flask, Response
@@ -30,14 +31,15 @@ class Testing(unittest.TestCase):
         """ Test redirection to external site, without previously being authorized
             Response should be the content of the sign in popup itself
         """
-        mock_request = {'host': 'w3test.fakedomain.com',
-                        'method': 'GET',
-                        'endpoint': 'MarkUp/Test/HTML401/current/tests/sec5_3_1-BF-01.html',
-                        'headers': {},
-                        'params': '',
-                        'data': {},
-                        'cookies': {},
-                        'form': {}}
+        mock_request = Mock()
+        mock_request.host = 'w3test.fakedomain.com'
+        mock_request.method = 'GET'
+        mock_request.path ='MarkUp/Test/HTML401/current/tests/sec5_3_1-BF-01.html'
+        mock_request.headers = {}
+        mock_request.query_string = b''
+        mock_request.data = {}
+        mock_request.cookies = {}
+        mock_request.form = {}
 
         # Get response: as we are not authorized we should get the html of the sign in popup
         response = self.revproxy_auth._path_redirect(mock_request) # pylint: disable=protected-access
@@ -52,23 +54,15 @@ class Testing(unittest.TestCase):
         """ Test redirection to external site, being previously authorized
             We simulate the authorization by using the freshly created cookie from the previous test
         """
-        # mock_request = {'host': 'w3test.fakedomain.com',
-        #                 'method': 'GET',
-        #                 'endpoint': 'MarkUp/Test/HTML401/current/tests/5_3_1-BF-01.html',
-        #                 'headers': {},
-        #                 'params': '',
-        #                 'data': {},
-        #                 'cookies': {'token':self.__class__.auth_cookie_name},
-        #                 'form': {}}
-
-        mock_request = {'host': 'localhost',
-                        'method': 'GET',
-                        'endpoint': 'test/',
-                        'headers': {},
-                        'params': '',
-                        'data': {},
-                        'cookies': {'token':self.__class__.auth_cookie_name},
-                        'form': {}}
+        mock_request = Mock()
+        mock_request.host = 'localhost'
+        mock_request.method = 'GET'
+        mock_request.path ='test/'
+        mock_request.headers = {}
+        mock_request.query_string = b''
+        mock_request.data = {}
+        mock_request.cookies = {'token':self.__class__.auth_cookie_name}
+        mock_request.form = {}
 
         # Get response: as we are not authorized we should get the html of the sign in popup
         response = self.revproxy_auth._path_redirect(mock_request) # pylint: disable=protected-access
@@ -88,7 +82,7 @@ class Testing(unittest.TestCase):
     def _get_auth_cookie_name(self, resp: Response) -> str:
         html = resp.get_data().decode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
-        return soup.find(id='auth')['value']
+        return soup.find(id='revproxy_auth')['value']
 
     def _get_client_cookie(self, cookie_name: str) -> str:
         """ Get a incomming cookie from a http response

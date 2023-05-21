@@ -32,11 +32,6 @@ class Testing(unittest.TestCase):
         # Get response: as we are not authorized we should get the html of the sign in popup
         response = self.client.get('/')
 
-        # Gets the 'token' cookie if set by previous request
-        # for cookie in self.client.cookie_jar:
-        #     if cookie.name == 'auth':
-        #         self.__class__.auth_cookie_name = cookie.value
-
         self.assertEqual(response.status_code, 200)
 
         # Chech that it is indeed the popup
@@ -49,13 +44,13 @@ class Testing(unittest.TestCase):
         response = self.client.post('/', data={'user': ' pepe', # Note the leading space before pepe... should work
                                                'password': '123456',
                                                'OTP': '1234',
-                                               'auth': self.__class__.auth_cookie_name})
+                                               'revproxy_auth': self.__class__.auth_cookie_name})
 
         # We should get a redirect to the original endpoint after the authentication
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.location, 'http://localhost/')
 
-        # Follow redirection
+        # Simulate redirection
         response = self.client.get(response.location)
 
         self.assertTrue(response.data.decode('utf-8').startswith('test result OK'))
@@ -76,7 +71,7 @@ class Testing(unittest.TestCase):
     def _get_auth_cookie_name(self, resp: Response) -> str:
         html = resp.get_data().decode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
-        return soup.find(id='auth')['value']
+        return soup.find(id='revproxy_auth')['value']
 
 if __name__ == '__main__':
     unittest.main()
