@@ -18,7 +18,7 @@ setuptools.setup(
         '': ['*.yml']
     },
     data_files=[
-        ('tests/data', ['tests/data/config.yml', 'tests/data/test_result']),
+        ('tests/data', ['tests/data/config.yml']),
         ('revproxy_auth/revproxy_auth_static/css/', ['revproxy_auth/revproxy_auth_static/css/view.css']),
         ('revproxy_auth/templates', ['revproxy_auth/templates/form.html'])
     ],
