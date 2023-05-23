@@ -248,8 +248,9 @@ class RevProxyAuth():
     def _reask_credentials(self, req: Request, old_cookie_name: str = None) -> Response:
         new_cookie, new_cookie_name = self._build_auth_cookie(req)
         if not new_cookie: # Unable to build cookie for requested path: host unknown
-            return Response(req.host, status=HTTP_501_NOT_IMPLEMENTED, content_type='text/plain')
-            # return ApiRestResponse(request_dict['host'], status=501)
+            return Response(f'Host {req.host} not found on revproxy_auth config translation table',
+                            status=HTTP_501_NOT_IMPLEMENTED, 
+                            content_type='text/plain')
         print(f'Creating new auth cookie {new_cookie_name} and reasking to user...')
         self._write_cookie(new_cookie, self.auth_cookie_folder, new_cookie_name)
         response = self._build_auth_popup(new_cookie_name)
