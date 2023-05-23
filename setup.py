@@ -15,7 +15,7 @@ setuptools.setup(
     url="https://github.com/Phornee/revproxy_auth",
     packages=setuptools.find_packages(),
     package_data={
-        '': ['*.yml']
+        '': ['*.yml', '*.css', '*.html']
     },
     data_files=[
         ('tests/data', ['tests/data/config.yml'])
