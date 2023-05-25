@@ -1,8 +1,12 @@
 NAS: https://mydomain.synology.me:5001
-testing_credentials:
-  user: pepe
-  password: '123456'
-  OTP: '1234'
+
+credentials:
+  - user: pepe
+    password: '123456'
+    OTP: '1234'
+  - user: juan
+    password: '123456'
+    OTP: '1234'
 mapping:
   w3test.fakedomain.com:
     host: https://www.w3.org

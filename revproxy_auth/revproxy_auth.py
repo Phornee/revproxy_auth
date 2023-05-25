@@ -216,17 +216,16 @@ class RevProxyAuth():
             user = form.get('user', '').strip(' \t\n\r')
             password = form.get('password', '').strip(' \t\n\r')
             otp = form.get('OTP', '').strip(' \t\n\r')
-            testing_credentials = self._config['testing_credentials']
-            if not testing_credentials:
-                url = (f'{self._config["NAS"]}/webapi/entry.cgi?api=SYNO.API.Auth&version=6&method=login'
-                       f'&account={user}&passwd={password}&otp_code={otp}')
-                auth_response = requests.get(url, timeout=10)
-                # Verify authentication
-                return auth_response.json()['success']
-            else: # Testing credentiales
-                return user == testing_credentials['user'] and \
-                       password == testing_credentials['password'] and \
-                       otp == testing_credentials['OTP']
+            for credential in self._config['credentials']:
+                if credential['user'] == user and credential['password'] == password and credential['OTP'] == otp:
+                    print('Validating credentials by user/password...')
+                    return True
+            print('Validating credentials Synology Auth...')
+            url = (f'{self._config["NAS"]}/webapi/entry.cgi?api=SYNO.API.Auth&version=6&method=login'
+                   f'&account={user}&passwd={password}&otp_code={otp}')
+            auth_response = requests.get(url, timeout=10)
+            # Verify authentication
+            return auth_response.json()['success']
         return False
 
     def _call_inner_get(self, host, endpoint, params, headers) -> Response:
@@ -290,7 +289,7 @@ class RevProxyAuth():
         if cookie:
             print(f'Local cookie {cookie_name} still alive')
             if self._credentials_valid(req.form):
-                print('Credentials validated by synology NAS')
+                print('Credentials validated.')
                 # Search for the cookie and redirect to related URL if present
                 if cookie['method'] == 'GET':
                     response = self._call_inner_get(cookie['host'], cookie['endpoint'], cookie['params'], cookie['headers'])
