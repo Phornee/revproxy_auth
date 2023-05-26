@@ -71,6 +71,8 @@ class RevProxyAuth():
             Response: Http response with the auth popup, or 
                       None if auth request is not needed because already are authenticated
         """
+        self.logger.debug(f'Request from host --> {req.host} | endpoint --> {req.path}')
+
         response = None
 
         if req.form.get('revproxy_auth', None):
@@ -251,7 +253,7 @@ class RevProxyAuth():
         new_cookie, new_cookie_name = self._build_auth_cookie(req)
         if not new_cookie: # Unable to build cookie for requested path: host unknown
             return Response(f'Host {req.host} not found on revproxy_auth config translation table',
-                            status=HTTP_501_NOT_IMPLEMENTED, 
+                            status=HTTP_501_NOT_IMPLEMENTED,
                             content_type='text/plain')
         self.logger.info(f'Creating new auth cookie {new_cookie_name} and reasking to user...')
         self._write_cookie(new_cookie, self.auth_cookie_folder, new_cookie_name)
@@ -272,18 +274,20 @@ class RevProxyAuth():
         """
         session_cookie_name = None
         session_cookie = None
-        cookie_name = req.form.get('revproxy_auth', None)
-        auth_cookie = self._get_local_auth_cookie(cookie_name)
+        auth_cookie_name = req.form.get('revproxy_auth', None)
+        auth_cookie = self._get_local_auth_cookie(auth_cookie_name)
         if auth_cookie:
             if self._credentials_valid(req.form):
-                self.logger.info(f'Auth Local cookie {cookie_name} still alive and valid.')
+                self.logger.info(f'Auth Local cookie {auth_cookie_name} still alive and valid.')
                 session_cookie, session_cookie_name = self._build_session_cookie(auth_cookie)
                 self.logger.info(f'Creating new session cookie {session_cookie_name}...')
                 self._write_cookie(session_cookie, self.session_cookie_folder, session_cookie_name)
             else:
-                self.logger.info(f'Auth Local cookie {cookie_name} still alive but credentials are invalid.')
+                self.logger.info(f'Auth Local cookie {auth_cookie_name} still alive but credentials are invalid.')
+            # Auth token can only be used once.
+            self._clear_local_cookie(self.auth_cookie_folder, auth_cookie_name)
         else:
-            self.logger.info(f'Auth Local cookie {cookie_name} doesnt exist.')
+            self.logger.info(f'Auth Local cookie {auth_cookie_name} doesnt exist.')
         return session_cookie, session_cookie_name
 
     def _first_auth_and_redirect(self, req: Request) -> Response:
@@ -295,9 +299,15 @@ class RevProxyAuth():
                 self.logger.info('Credentials validated.')
                 # Search for the cookie and redirect to related URL if present
                 if cookie['method'] == 'GET':
-                    response = self._call_inner_get(cookie['host'], cookie['endpoint'], cookie['params'], cookie['headers'])
+                    response = self._call_inner_get(cookie['host'],
+                                                    cookie['endpoint'],
+                                                    cookie['params'],
+                                                    cookie['headers'])
                 else:
-                    response = self._call_inner_post(cookie['host'], cookie['endpoint'], cookie['content'], cookie['headers'])
+                    response = self._call_inner_post(cookie['host'],
+                                                     cookie['endpoint'],
+                                                     cookie['content'],
+                                                     cookie['headers'])
                 response.set_cookie('token', cookie_name, max_age=COOKIE_LIFE_MINUTES*60)
             else: # We come from the auth popup, but credentials are invalid --> ask again for credentials
                 self.logger.info('Credentials rejected. Reopening auth popup')
@@ -332,9 +342,13 @@ class RevProxyAuth():
             if session_cookie_name:
                 self.logger.info('Credentials validated by synology NAS')
                 if session_cookie['method'] == 'GET':
-                    response = self._call_inner_get(session_cookie['host'], session_cookie['endpoint'], session_cookie['params'], {})
+                    response = self._call_inner_get(session_cookie['host'],
+                                                    session_cookie['endpoint'],
+                                                    session_cookie['params'], {})
                 else:
-                    response = self._call_inner_post(session_cookie['host'], session_cookie['endpoint'], session_cookie['content'], {})
+                    response = self._call_inner_post(session_cookie['host'],
+                                                     session_cookie['endpoint'],
+                                                     session_cookie['content'], {})
                 # # To get rid of the POST form data, and reenter with the valid session token
                 # response = redirect(session_cookie['endpoint'])
                 response.set_cookie('token', session_cookie_name, max_age=COOKIE_LIFE_MINUTES*60)
@@ -374,5 +388,5 @@ class RevProxyAuth():
                     response = self._reask_credentials(req, old_cookie_name=cookie_name)
             else:  # No session cookie... and no form data with credendials
                 response = self._reask_credentials(req)
-      
+
         return response
