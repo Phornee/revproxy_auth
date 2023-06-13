@@ -3,6 +3,7 @@ import os
 import time
 from urllib import parse
 import json
+import logging
 from pathlib import Path
 import secrets
 import jinja2
@@ -10,7 +11,6 @@ import requests
 from flask import Flask, request, Response, send_from_directory, redirect, Request
 
 from config_yml import Config
-from log_mgr import Logger
 
 COOKIE_LIFE_MINUTES = 15
 
@@ -36,7 +36,7 @@ class RevProxyAuth():
 
         self._config = Config(root_class, template_config_path, 'revproxy_auth_config.yml', dry_run=dry_run)
 
-        self.logger = Logger(root_class, 'revproxy_auth', dry_run=dry_run)
+        self.logger = logging.getLogger()
 
         self.homevar = os.path.join(str(Path.home()), 'var', root_class)
 
@@ -71,7 +71,7 @@ class RevProxyAuth():
             Response: Http response with the auth popup, or 
                       None if auth request is not needed because already are authenticated
         """
-        self.logger.debug(f'Request from host --> {req.host} | endpoint --> {req.path}')
+        self.logger.debug('Request from host --> %s | endpoint --> %s', req.host, req.path)
 
         response = None
 
@@ -87,15 +87,15 @@ class RevProxyAuth():
         else:
             # Try to get authentication from the cookie
             cookie_name = req.cookies.get('token', None)
-            self.logger.debug(f'Incomming Session token Cookie name: {cookie_name}')
+            self.logger.debug('Incomming Session token Cookie name: %s', cookie_name)
             if cookie_name:
                 # We get a session token... lets verify if its legitimate, and still alive
                 cookie = self._get_local_session_cookie(cookie_name)
                 if cookie: # Already authenticated --> Lets tunnel info back to client
-                    self.logger.debug(f'AUTHENTICATED: Session Token Cookie {cookie_name} exists in local')
+                    self.logger.debug('AUTHENTICATED: Session Token Cookie %s exists in local', cookie_name)
                     response = callback()
                 else: # We got a session, but its no longer valid --> ask again for credentials
-                    self.logger.debug(f'NOT AUTHENTICATED: Session Token Cookie {cookie_name} DOESNT exist in local')
+                    self.logger.debug('NOT AUTHENTICATED: Session Token Cookie %s DOESNT exist in local', cookie_name)
                     response = self._reask_credentials(req, old_cookie_name=cookie_name)
             else:  # No session cookie... and no form data with credendials
                 response = self._reask_credentials(req)
@@ -255,11 +255,11 @@ class RevProxyAuth():
             return Response(f'Host {req.host} not found on revproxy_auth config translation table',
                             status=HTTP_501_NOT_IMPLEMENTED,
                             content_type='text/plain')
-        self.logger.info(f'Creating new auth cookie {new_cookie_name} and reasking to user...')
+        self.logger.info('Creating new auth cookie %s and reasking to user...', new_cookie_name)
         self._write_cookie(new_cookie, self.auth_cookie_folder, new_cookie_name)
         response = self._build_auth_popup(new_cookie_name)
         if old_cookie_name:
-            self.logger.info(f'Deleting cookie in response: {old_cookie_name}')
+            self.logger.info('Deleting cookie in response: %s', old_cookie_name)
             self._clear_local_cookie(self.auth_cookie_folder, old_cookie_name)
         return response
 
@@ -278,23 +278,23 @@ class RevProxyAuth():
         auth_cookie = self._get_local_auth_cookie(auth_cookie_name)
         if auth_cookie:
             if self._credentials_valid(req.form):
-                self.logger.info(f'Auth Local cookie {auth_cookie_name} still alive and valid.')
+                self.logger.info('Auth Local cookie %s still alive and valid.', auth_cookie_name)
                 session_cookie, session_cookie_name = self._build_session_cookie(auth_cookie)
-                self.logger.info(f'Creating new session cookie {session_cookie_name}...')
+                self.logger.info('Creating new session cookie %s...', session_cookie_name)
                 self._write_cookie(session_cookie, self.session_cookie_folder, session_cookie_name)
             else:
-                self.logger.info(f'Auth Local cookie {auth_cookie_name} still alive but credentials are invalid.')
+                self.logger.info('Auth Local cookie %s still alive but credentials are invalid.', auth_cookie_name)
             # Auth token can only be used once.
             self._clear_local_cookie(self.auth_cookie_folder, auth_cookie_name)
         else:
-            self.logger.info(f'Auth Local cookie {auth_cookie_name} doesnt exist.')
+            self.logger.info('Auth Local cookie %s doesnt exist.', auth_cookie_name)
         return session_cookie, session_cookie_name
 
     def _first_auth_and_redirect(self, req: Request) -> Response:
         cookie_name = req.form.get('revproxy_auth', None)
         cookie = self._get_local_auth_cookie(cookie_name)
         if cookie:
-            self.logger.info(f'Local cookie {cookie_name} still alive')
+            self.logger.info('Local cookie %s still alive', cookie_name)
             if self._credentials_valid(req.form):
                 self.logger.info('Credentials validated.')
                 # Search for the cookie and redirect to related URL if present
@@ -326,7 +326,7 @@ class RevProxyAuth():
             cookie, cookie_name = self._build_auth_cookie(req)
             if not cookie: # Unable to build cookie for requested path: host unknown
                 return Response(req.path, status=501, content_type='text/plain')
-            self.logger.debug(f"favicon.ico requested: Directly returning from inner endpoint {cookie['host']}")
+            self.logger.debug('favicon.ico requested: Directly returning from inner endpoint %s', cookie['host'])
             if req.url == parse.urljoin(cookie['host'], req.path):
                 return Response(req.path, status=400, content_type='text/plain')
             return self._call_inner_get(host=cookie['host'],
@@ -357,12 +357,12 @@ class RevProxyAuth():
         else:
             # Try to get authentication from the cookie
             cookie_name = req.cookies.get('token', None)
-            self.logger.debug(f'Incomming Session token Cookie name: {cookie_name}')
+            self.logger.debug('Incomming Session token Cookie name: %s', cookie_name)
             if cookie_name:
                 # We get a session token... lets verify if its legitimate, and still alive
                 cookie = self._get_local_session_cookie(cookie_name)
                 if cookie: # Already authenticated --> Lets tunnel info back to client
-                    self.logger.debug(f'AUTHENTICATED: Session Token Cookie {cookie_name} exists in local')
+                    self.logger.debug('AUTHENTICATED: Session Token Cookie %s exists in local', cookie_name)
                     # response = callback()
                     if req.path == '/': # If path is the root, lets go to the configured initial entrypoint.
                         method = cookie['method']
@@ -384,7 +384,7 @@ class RevProxyAuth():
                     else:
                         response = self._call_inner_post(cookie['host'], path, data, headers)
                 else: # We got a session, but its no longer valid --> ask again for credentials
-                    self.logger.debug(f'NOT AUTHENTICATED: Session Token Cookie {cookie_name} DOESNT exist in local')
+                    self.logger.debug('NOT AUTHENTICATED: Session Token Cookie %s DOESNT exist in local', cookie_name)
                     response = self._reask_credentials(req, old_cookie_name=cookie_name)
             else:  # No session cookie... and no form data with credendials
                 response = self._reask_credentials(req)
