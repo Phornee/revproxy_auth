@@ -80,7 +80,9 @@ class RevProxyAuth():
             if session_cookie_name:
                 self.logger.info('Credentials validated.')
                 # To get rid of the POST form data, and reenter with the valid session token
-                response = redirect(parse.urljoin(session_cookie['host'], session_cookie['endpoint']))
+                url_redirect = parse.urljoin(session_cookie['host'], session_cookie['endpoint'])
+                self.logger.debug('Redirecting to %s', url_redirect)
+                response = redirect(url_redirect)
                 response.set_cookie('token', session_cookie_name, max_age=COOKIE_LIFE_MINUTES*60)
             else:
                 response = self._reask_credentials(req)
@@ -196,6 +198,7 @@ class RevProxyAuth():
             return Response(content, status=HTTP_200_OK,  content_type='text/html')
 
     def _get_local_auth_cookie(self, cookie_name:str = None):
+        self._clear_expired_cookies(self.auth_cookie_folder)
         cookie = None
         if cookie_name:
             cookie_path = os.path.join(self.auth_cookie_folder, cookie_name)
@@ -207,6 +210,7 @@ class RevProxyAuth():
         return cookie
 
     def _get_local_session_cookie(self, cookie_name:str = None):
+        self._clear_expired_cookies(self.session_cookie_folder)
         cookie = None
         if cookie_name:
             cookie_path = os.path.join(self.session_cookie_folder, cookie_name)
@@ -221,10 +225,12 @@ class RevProxyAuth():
             user = form.get('user', '').strip(' \t\n\r')
             password = form.get('password', '').strip(' \t\n\r')
             otp = form.get('OTP', '').strip(' \t\n\r')
-            for credential in self._config['credentials']:
-                if credential['user'] == user and credential['password'] == password and credential['OTP'] == otp:
-                    self.logger.info('Validating credentials by user/password...')
-                    return True
+            fixed_credentials = self._config['credentials']
+            if fixed_credentials:
+                for credential in fixed_credentials:
+                    if credential['user'] == user and credential['password'] == password and credential['OTP'] == otp:
+                        self.logger.info('Validating credentials by user/password...')
+                        return True
             self.logger.info('Validating credentials Synology Auth...')
             url = (f'{self._config["NAS"]}/webapi/entry.cgi?api=SYNO.API.Auth&version=6&method=login'
                    f'&account={user}&passwd={password}&otp_code={otp}')
@@ -235,6 +241,7 @@ class RevProxyAuth():
 
     def _call_inner_get(self, host, endpoint, params, headers) -> Response:
         fullpath = parse.urljoin(host, endpoint)
+        self.logger.debug('Calling inner GET %s', fullpath)
         resp = requests.get(fullpath,
                             params=params,
                             headers = headers,
@@ -243,6 +250,7 @@ class RevProxyAuth():
 
     def _call_inner_post(self, host, endpoint, data, headers) -> Response:
         fullpath = parse.urljoin(host, endpoint)
+        self.logger.debug('Calling inner POST %s', fullpath)
         resp = requests.post(fullpath,
                              data = data,
                              headers = headers,
