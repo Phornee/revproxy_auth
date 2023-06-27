@@ -51,18 +51,16 @@ class RevProxyAuth():
                               view_func=self._get_static_content,
                               methods=['GET', 'POST'])
 
-    def token_valid(self, req):
+    def session_token_valid(self, req):
         """ Checks if the token in the request matches an existing and not-expired cookie file
         Args:
             req (Request): Http request
         Returns:
             bool: True if token matches cookie file, and its not expired yet
         """
-        valid = False
         cookie_name = req.cookies.get('token', None)
-        if cookie_name:  # We get a token... lets verify if its legitimate, and still alive
-            valid = not self._clear_local_cookie_if_expired(self.auth_cookie_folder, cookie_name)
-        return valid
+        return cookie_name and self._get_local_session_cookie(cookie_name)
+
 
     def get_auth_response(self, req, callback) -> Response:
         """ If valid auth token comes fromt he client, return none
@@ -71,7 +69,7 @@ class RevProxyAuth():
             Response: Http response with the auth popup, or 
                       None if auth request is not needed because already are authenticated
         """
-        self.logger.debug('Request from host --> %s | endpoint --> %s', req.host, req.path)
+        self.logger.info('Request from host --> %s.', req.access_route[0])
 
         response = None
 
