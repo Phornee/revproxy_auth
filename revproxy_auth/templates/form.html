@@ -8,7 +8,7 @@
 </head>
 <body id="main_body">
   <div id="form_container">
-    <form id="signin_form" style=" margin-block-end: 0em;" method="POST">
+    <form id="signin_form" style=" margin-block-end: 0em;" method="POST"; onsubmit=submitform()>
             <h1>Sign in</h1>
             <div style="margin: 1px">
                 <input name = "user" type="text" placeholder="User" class="edit_text">
@@ -20,10 +20,20 @@
                 <input name = "OTP" type="text" placeholder="OTP Code" class="edit_text">
             </div>
             <div style="margin: 1px">
-                <input type="submit" value="Sign in" class="button_text">
+                <input type="submit" value="Sign in" class="button_text" id="submitbutton">
+            </div>
+            <div style="margin: 1px">
+                <div class="loader" style="margin: auto; margin-top: -150px;" id="loader"></div>
             </div>
             <input name = "revproxy_auth" type="hidden" value="{{revproxy_auth}}" id="revproxy_auth">
         </form>  
   </div>
-  </body>
+  <script>
+    function submitform() {
+        submitbutton.disabled = true
+        loader.style.visibility = "visible"
+        return true
+    }
+  </script>
+</body>
 </html>
