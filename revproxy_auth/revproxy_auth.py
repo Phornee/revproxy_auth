@@ -12,6 +12,20 @@ from flask import Flask, request, Response, send_from_directory, redirect, Reque
 
 from config_yml import Config
 
+# OTP calculation, based on secret
+import hmac, base64, struct, hashlib, time
+def get_hotp_token(secret, intervals_no):
+    key = base64.b32decode(secret, True)
+    msg = struct.pack(">Q", intervals_no)
+    h = hmac.new(key, msg, hashlib.sha1).digest()
+    o = h[19] & 15
+    h = (struct.unpack(">I", h[o:o+4])[0] & 0x7fffffff) % 1000000
+    return '{:06}'.format(h)
+
+def get_totp_token(secret):
+    return get_hotp_token(secret, intervals_no=int(time.time())//30)
+
+
 COOKIE_LIFE_MINUTES = 15
 
 HTTP_200_OK = 200
@@ -217,6 +231,9 @@ class RevProxyAuth():
                     cookie = json.load(cookie_file)
         return cookie
 
+
+
+
     def _credentials_valid(self, form):
         token = form.get('revproxy_auth', None)
         if token:
@@ -226,9 +243,11 @@ class RevProxyAuth():
             fixed_credentials = self._config['credentials']
             if fixed_credentials:
                 for credential in fixed_credentials:
-                    if credential['user'] == user and credential['password'] == password and credential['OTP'] == otp:
-                        self.logger.info('Validating credentials by user/password...')
-                        return True
+                    if credential['user'] == user and credential['password'] == password:
+                        correct_otp = get_totp_token(credential['otp_secret'])
+                        if str(correct_otp) == otp:
+                            self.logger.info('Validating credentials by user/password...')
+                            return True
             self.logger.info('Validating credentials Synology Auth...')
             url = (f'{self._config["NAS"]}/webapi/entry.cgi?api=SYNO.API.Auth&version=6&method=login'
                    f'&account={user}&passwd={password}&otp_code={otp}')
