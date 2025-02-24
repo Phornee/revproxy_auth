@@ -3,10 +3,10 @@ NAS: https://mydomain.synology.me:5001
 credentials:
   - user: pepe
     password: '123456'
-    OTP: '1234'
+    otp_secret: 'qwertyuiopasdfgh'
   - user: juan
     password: '123456'
-    OTP: '1234'
+    otp_secret: 'qwertyuiopasdfgh'
 mapping:
   w3test.fakedomain.com:
     host: https://www.w3.org

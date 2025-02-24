@@ -248,12 +248,12 @@ class RevProxyAuth():
                         if str(correct_otp) == otp:
                             self.logger.info('Validating credentials by user/password...')
                             return True
-            self.logger.info('Validating credentials Synology Auth...')
-            url = (f'{self._config["NAS"]}/webapi/entry.cgi?api=SYNO.API.Auth&version=6&method=login'
-                   f'&account={user}&passwd={password}&otp_code={otp}')
-            auth_response = requests.get(url, timeout=10)
-            # Verify authentication
-            return auth_response.json()['success']
+            # self.logger.info('Validating credentials Synology Auth...')
+            # url = (f'{self._config["NAS"]}/webapi/entry.cgi?api=SYNO.API.Auth&version=6&method=login'
+            #        f'&account={user}&passwd={password}&otp_code={otp}')
+            # auth_response = requests.get(url, timeout=10)
+            # # Verify authentication
+            # return auth_response.json()['success']
         return False
 
     def _call_inner_get(self, host, endpoint, params, headers) -> Response:

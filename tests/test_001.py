@@ -5,7 +5,7 @@ from pathlib import Path
 from flask import Flask, request, Response
 from bs4 import BeautifulSoup
 
-from revproxy_auth import RevProxyAuth
+from revproxy_auth import RevProxyAuth, get_totp_token
 
 
 class Testing(unittest.TestCase):
@@ -40,11 +40,26 @@ class Testing(unittest.TestCase):
         self.__class__.auth_cookie_name = self._get_auth_cookie_name(response)
         self.assertIsNotNone(self.__class__.auth_cookie_name, 'Cookie name was not send by server.')
 
-        # We simulate the client action by sending back the right testing credentials.
-        response = self.client.post('/', data={'user': ' pepe', # Note the leading space before pepe... should work
-                                               'password': '123456',
-                                               'OTP': '1234',
-                                               'revproxy_auth': self.__class__.auth_cookie_name})
+        # We loop two times, because it could be the case that the OTP calculated here in the test, just expires
+        # before the internal code of revproxy_auth can check it. So, in that unlikely (but possible) case, we
+        # just retry it once inmediately (before 30 seconds)
+        for i in range(2):
+            # Artificially adds a leading space to user, to test that it is correctly ignored
+            test_user_ok = ' ' + self.revproxy_auth._config['credentials'][0]['user']
+            test_pass_ok = self.revproxy_auth._config['credentials'][0]['password']
+            test_otp_secret = self.revproxy_auth._config['credentials'][0]['otp_secret']
+
+            correct_otp = get_totp_token(test_otp_secret)
+
+            # We simulate the client action by sending back the right testing credentials.
+            response = self.client.post('/', data={'user': test_user_ok,
+                                                'password': test_pass_ok,
+                                                'OTP': correct_otp,
+                                                'revproxy_auth': self.__class__.auth_cookie_name})
+            # Expected result is 302. If we have bad luck, and OTP just expired vefore revproxy checks for it,
+            # then inmediatly try a second time
+            if response.status_code == 302:
+                break
 
         # We should get a redirect to the original endpoint after the authentication
         self.assertEqual(response.status_code, 302)
