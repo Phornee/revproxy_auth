@@ -14,7 +14,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Phornee/revproxy_auth",
     packages=setuptools.find_packages(),
-    # include_package_data=True,
+    include_package_data=True,
     # data_files=[
     #     ('tests/data', ['tests/data/config.yml'])
     # ],
