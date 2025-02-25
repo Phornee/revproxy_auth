@@ -76,7 +76,7 @@ class Testing(unittest.TestCase):
         """
         # We were already authenticated in previous test... so we should get the result in the lambda
         # We fake the token with the auth token to try to hack the system
-        self.client.set_cookie('localhost', 'token',  self.__class__.auth_cookie_name)
+        self.client.set_cookie('token',  self.__class__.auth_cookie_name, domain='localhost')
         response = self.client.get('/', headers={'Content-Type': 'application/json'})
 
         self.assertEqual(response.status_code, 200)

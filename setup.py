@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="revproxy_auth",
-    version="0.1.13",
+    version="0.1.14",
     author="Ismael Raya",
     author_email="phornee@gmail.com",
     description="Reverse proxy with synology authentication",
@@ -25,9 +25,10 @@ setuptools.setup(
         "Topic :: Home Automation"
     ],
     install_requires=[
-        'Flask>=1.1.2',
+        'Flask>=3.1.0',
         'config_yml>=0.3.0',
-        'beautifulsoup4>=4.10.0'
+        'beautifulsoup4>=4.13.3',
+        'requests>=2.32.3'
     ],
     python_requires='>=3.6',
 )
