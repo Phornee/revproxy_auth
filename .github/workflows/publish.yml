@@ -17,10 +17,10 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@master
-      - name: Set up python 3.9
+      - name: Set up python 3.11
         uses: actions/setup-python@v3
         with:
-          python-version: "3.9"
+          python-version: 3.11
       
       # Installs and upgrades pip, installs other dependencies and installs the package from setup.py
       - name: "Installs and upgrades pip, installs other dependencies and installs the package from setup.py"
