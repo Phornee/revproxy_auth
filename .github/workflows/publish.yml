@@ -32,7 +32,7 @@ jobs:
           # If requirements.txt exists, install from it
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           # Install the package from setup.py
-          # python3 setup.py install
+          python3 setup.py install
 
       # Tests with unittest
       - name: Test with unittest
@@ -44,6 +44,7 @@ jobs:
       # Upload to TestPyPI
       - name: Build and Upload to TestPyPI
         run: |
+          rm -rf ./dist
           # python3 setup.py bdist_wheel
           python3 -m build --wheel
           twine upload --verbose --skip-existing dist/*
