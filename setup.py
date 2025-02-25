@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="revproxy_auth",
-    version="0.1.14",
+    version="0.1.15",
     author="Ismael Raya",
     author_email="phornee@gmail.com",
     description="Reverse proxy with synology authentication",
@@ -18,6 +18,10 @@ setuptools.setup(
     data_files=[
         ('tests/data', ['tests/data/config.yml'])
     ],
+    package_data={
+        'revproxy_auth/css', ['view.css'],
+        'templates', ['form.html']
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -30,5 +34,5 @@ setuptools.setup(
         'beautifulsoup4>=4.13.3',
         'requests>=2.32.3'
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.11',
 )
