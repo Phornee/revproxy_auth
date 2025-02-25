@@ -28,11 +28,13 @@ jobs:
           # Upgrade pip
           python3 -m pip install --upgrade pip
           # Install build deps
-          python3 -m pip install setuptools wheel twine build
+          python3 -m pip install setuptools wheel twine
           # If requirements.txt exists, install from it
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          # Install the package from setup.py
+          # Install the package dependencies from setup.py. As a side effect it will create a dist folder 
+          # with an egg that we must remove, to not interfere with twine upload later
           python3 setup.py install
+          rm -rf ./dist
 
       # Tests with unittest
       - name: Test with unittest
@@ -44,9 +46,7 @@ jobs:
       # Upload to TestPyPI
       - name: Build and Upload to TestPyPI
         run: |
-          rm -rf ./dist
-          # python3 setup.py bdist_wheel
-          python3 -m build --wheel
+          python3 setup.py bdist_wheel
           twine upload --verbose --skip-existing dist/*
         env:
           TWINE_USERNAME: __token__
