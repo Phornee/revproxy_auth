@@ -14,14 +14,14 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Phornee/revproxy_auth",
     packages=setuptools.find_packages(),
-    include_package_data=True,
-    data_files=[
-        ('tests/data', ['tests/data/config.yml'])
-    ],
-    package_data={
-        'revproxy_auth/css', ['view.css'],
-        'templates', ['form.html']
-    },
+    # include_package_data=True,
+    # data_files=[
+    #     ('tests/data', ['tests/data/config.yml'])
+    # ],
+    # package_data={
+    #     'revproxy_auth/css': ['view.css'],
+    #     'templates': ['form.html']
+    # },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

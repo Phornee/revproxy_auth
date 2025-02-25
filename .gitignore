@@ -1,3 +1,6 @@
 __pycache__
+build
+dist
+revproxy_auth.egg-info
 *.pyc
 
